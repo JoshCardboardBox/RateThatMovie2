@@ -19,6 +19,8 @@ from page_homepage import *
 from page_login import *
 from page_createacc import *
 from page_search import *
+from page_settings import *
+from page_reviews import *
 
 
 #RUN WEBSITE
