@@ -65,7 +65,7 @@ CREATE TABLE actors (
     PRIMARY KEY (actor_id)
 );
 
-INSERT INTO actors SELECT id as actors_id, person_id, movie_id, character, cast_order FROM temp_cast;
+INSERT INTO actors SELECT id as actor_id, person_id, movie_id, character, cast_order FROM temp_cast;
 
 
 CREATE TABLE watched (
@@ -74,4 +74,15 @@ CREATE TABLE watched (
 
     PRIMARY KEY (user_id, movie_id)
 );
+
+CREATE TABLE favorites (
+    favorite_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id),
+    item_type VARCHAR(32) NOT NULL,
+    item_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (user_id, item_type, item_id)
+)
+
+
 
