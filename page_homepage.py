@@ -16,11 +16,12 @@ def homepage():
             ui.label("Need to express your love or hatred of any movie?")
             ui.label("Well, this website is for individuals like you.")
 
-    s = check_login()
-    if s == False:
-        homepage_dashboard()
+    # ⭐ Always show dashboard buttons
+    homepage_dashboard()
 
+    # Optional login message
     check_login_msg()
+
     uit_footnote()
 
 def homepage_dashboard():
@@ -28,3 +29,4 @@ def homepage_dashboard():
         ui.label("Dashboard").style('font-size: 125%')
         ui.button('See Reviews', on_click=lambda: ui.navigate.to('/reviews'))
         ui.button('Search Movies, Actors, and More!', on_click=lambda: ui.navigate.to('/search'))
+        ui.button("My Favorites", on_click=lambda: ui.navigate.to('/favorites'))
