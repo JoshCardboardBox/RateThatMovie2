@@ -3,7 +3,7 @@ import psycopg2
 import psycopg2.extras
 
 # ---------------------------------------------------------
-# KEEP YOUR EXISTING CONNECTION ABOVE THIS LINE
+# KEEP YOUR EXISTING conn AND cur ABOVE THIS LINE
 # ---------------------------------------------------------
 
 
@@ -64,41 +64,21 @@ def search_actors(query):
 
 
 # ---------------------------------------------------------
-# UNIVERSAL DIRECTOR SEARCH
+# SEARCH DIRECTORS (crew-based)
 # ---------------------------------------------------------
 def search_directors(query):
     try:
         pattern = f"%{query}%"
-
-        # 1️⃣ Search directors table
-        cur.execute("""
-            SELECT director_id, name
-            FROM directors
-            WHERE LOWER(name) LIKE LOWER(%s)
-        """, [pattern])
-        directors_table = cur.fetchall()
-
-        # 2️⃣ Search crew table for job='Director'
         cur.execute("""
             SELECT DISTINCT p.person_id AS director_id, p.name
             FROM crew c
             JOIN persons p ON p.person_id = c.person_id
             WHERE LOWER(c.job) = 'director'
               AND LOWER(p.name) LIKE LOWER(%s)
+            ORDER BY p.name
+            LIMIT 50;
         """, [pattern])
-        crew_directors = cur.fetchall()
-
-        # 3️⃣ Merge results (avoid duplicates)
-        seen = set()
-        results = []
-
-        for d in directors_table + crew_directors:
-            if d['director_id'] not in seen:
-                seen.add(d['director_id'])
-                results.append(d)
-
-        return results[:50]
-
+        return cur.fetchall()
     except Exception as e:
         print("SEARCH DIRECTORS ERROR:", e)
         return []
@@ -121,6 +101,22 @@ def get_actor_details(person_id):
 
 
 # ---------------------------------------------------------
+# DIRECTOR DETAILS (crew-based)
+# ---------------------------------------------------------
+def get_director_details(person_id):
+    try:
+        cur.execute("""
+            SELECT person_id AS director_id, name
+            FROM persons
+            WHERE person_id = %s;
+        """, [person_id])
+        return cur.fetchone()
+    except Exception as e:
+        print("GET DIRECTOR DETAILS ERROR:", e)
+        return None
+
+
+# ---------------------------------------------------------
 # MOVIES BY ACTOR
 # ---------------------------------------------------------
 def get_movies_by_actor(person_id):
@@ -139,49 +135,10 @@ def get_movies_by_actor(person_id):
 
 
 # ---------------------------------------------------------
-# DIRECTOR DETAILS (works for both tables)
+# MOVIES BY DIRECTOR (crew-based)
 # ---------------------------------------------------------
-def get_director_details(director_id):
+def get_movies_by_director(person_id):
     try:
-        # Try directors table first
-        cur.execute("""
-            SELECT director_id, name
-            FROM directors
-            WHERE director_id = %s;
-        """, [director_id])
-        d = cur.fetchone()
-        if d:
-            return d
-
-        # Try persons table (crew-based directors)
-        cur.execute("""
-            SELECT person_id AS director_id, name
-            FROM persons
-            WHERE person_id = %s;
-        """, [director_id])
-        return cur.fetchone()
-
-    except Exception as e:
-        print("GET DIRECTOR DETAILS ERROR:", e)
-        return None
-
-
-# ---------------------------------------------------------
-# MOVIES BY DIRECTOR (works for both tables)
-# ---------------------------------------------------------
-def get_movies_by_director(director_id):
-    try:
-        # 1️⃣ directors table
-        cur.execute("""
-            SELECT m.movie_id, m.title, m.release_date
-            FROM movie_directors md
-            JOIN movies m ON m.movie_id = md.movie_id
-            WHERE md.director_id = %s
-            ORDER BY m.release_date DESC;
-        """, [director_id])
-        movies = cur.fetchall()
-
-        # 2️⃣ crew table fallback
         cur.execute("""
             SELECT m.movie_id, m.title, m.release_date
             FROM crew c
@@ -189,76 +146,128 @@ def get_movies_by_director(director_id):
             WHERE c.person_id = %s
               AND LOWER(c.job) = 'director'
             ORDER BY m.release_date DESC;
-        """, [director_id])
-        movies += cur.fetchall()
-
-        # Remove duplicates
-        seen = set()
-        final = []
-        for m in movies:
-            if m['movie_id'] not in seen:
-                seen.add(m['movie_id'])
-                final.append(m)
-
-        return final
-
+        """, [person_id])
+        return cur.fetchall()
     except Exception as e:
         print("GET MOVIES BY DIRECTOR ERROR:", e)
         return []
 
 
 # ---------------------------------------------------------
-# FAVORITES
+# FAVORITES (UNIFIED)
 # ---------------------------------------------------------
-def add_favorite(user_id, movie_id):
+def add_favorite_item(user_id, item_type, item_id):
     try:
         cur.execute("""
-            INSERT INTO favorites (user_id, movie_id)
-            VALUES (%s, %s)
-            ON CONFLICT (user_id, movie_id) DO NOTHING;
-        """, [user_id, movie_id])
+            INSERT INTO favorites (user_id, item_type, item_id)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (user_id, item_type, item_id) DO NOTHING;
+        """, [user_id, item_type, item_id])
         conn.commit()
         return True
     except Exception as e:
         conn.rollback()
-        print("ADD FAVORITE ERROR:", e)
+        print("ADD FAVORITE ITEM ERROR:", e)
         return False
 
 
-def remove_favorite(user_id, movie_id):
+def remove_favorite_item(user_id, item_type, item_id):
     try:
         cur.execute("""
             DELETE FROM favorites
-            WHERE user_id=%s AND movie_id=%s;
-        """, [user_id, movie_id])
+            WHERE user_id=%s AND item_type=%s AND item_id=%s;
+        """, [user_id, item_type, item_id])
         conn.commit()
         return True
     except Exception as e:
         conn.rollback()
-        print("REMOVE FAVORITE ERROR:", e)
+        print("REMOVE FAVORITE ITEM ERROR:", e)
         return False
 
 
-def is_favorited(user_id, movie_id):
+def is_favorited_item(user_id, item_type, item_id):
     try:
         cur.execute("""
-            SELECT 1 FROM favorites
-            WHERE user_id=%s AND movie_id=%s;
-        """, [user_id, movie_id])
+            SELECT 1
+            FROM favorites
+            WHERE user_id=%s AND item_type=%s AND item_id=%s;
+        """, [user_id, item_type, item_id])
         return cur.fetchone() is not None
     except Exception as e:
-        print("IS FAVORITED ERROR:", e)
+        print("IS FAVORITED ITEM ERROR:", e)
         return False
 
 
+# Convenience wrappers
 def get_favorite_movies(user_id):
     try:
         cur.execute("""
-            SELECT movie_id
-            FROM favorites
-            WHERE user_id=%s;
+            SELECT f.item_id AS movie_id, m.title, m.release_date
+            FROM favorites f
+            JOIN movies m ON m.movie_id = f.item_id
+            WHERE f.user_id=%s AND f.item_type='movie';
         """, [user_id])
         return cur.fetchall()
     except Exception as e:
-        print("GET FAVORITES ERROR:", e)
+        print("GET FAVORITE MOVIES ERROR:", e)
+        return []
+
+
+def get_favorite_actors(user_id):
+    try:
+        cur.execute("""
+            SELECT f.item_id AS person_id, p.name
+            FROM favorites f
+            JOIN persons p ON p.person_id = f.item_id
+            WHERE f.user_id=%s AND f.item_type='actor';
+        """, [user_id])
+        return cur.fetchall()
+    except Exception as e:
+        print("GET FAVORITE ACTORS ERROR:", e)
+        return []
+
+
+def get_favorite_directors(user_id):
+    try:
+        cur.execute("""
+            SELECT f.item_id AS director_id, p.name
+            FROM favorites f
+            JOIN persons p ON p.person_id = f.item_id
+            WHERE f.user_id=%s AND f.item_type='director';
+        """, [user_id])
+        return cur.fetchall()
+    except Exception as e:
+        print("GET FAVORITE DIRECTORS ERROR:", e)
+        return []
+
+def get_full_cast(movie_id):
+    try:
+        cur.execute("""
+            SELECT p.person_id, p.name, a.character, a.cast_order
+            FROM actors a
+            JOIN persons p ON p.person_id = a.person_id
+            WHERE a.movie_id = %s
+            ORDER BY a.cast_order ASC;
+        """, [movie_id])
+        return cur.fetchall()
+    except Exception as e:
+        print("GET FULL CAST ERROR:", e)
+        return []
+
+
+# ---------------------------------------------------------
+# FULL CREW (crew table)
+# ---------------------------------------------------------
+def get_full_crew(movie_id):
+    try:
+        cur.execute("""
+            SELECT p.person_id, p.name, c.job, c.department
+            FROM crew c
+            JOIN persons p ON p.person_id = c.person_id
+            WHERE c.movie_id = %s
+            ORDER BY c.department, c.job, p.name;
+        """, [movie_id])
+        return cur.fetchall()
+    except Exception as e:
+        print("GET FULL CREW ERROR:", e)
         return []

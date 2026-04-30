@@ -1,9 +1,10 @@
-# page_favorites.py
-
 from tlbx_imports import *
 from ui_toolbox import *
-from favoriting import get_favorite_movies, remove_favorite
-from db_actions import cur, conn
+from db_actions import (
+    get_favorite_movies,
+    get_favorite_actors,
+    get_favorite_directors,
+)
 
 
 @ui.page('/favorites')
@@ -18,51 +19,75 @@ def favorites_page():
         uit_footnote()
         return
 
-    ui.label("Your Favorite Movies").classes("text-2xl font-bold mb-4")
+    ui.label("My Favorites").classes("text-4xl font-bold mb-6")
 
-    favorites = get_favorite_movies(user_id)
+    # ---------------------------------------------------------
+    # ⭐ FAVORITE MOVIES
+    # ---------------------------------------------------------
+    ui.label("Favorite Movies").classes("text-2xl font-bold mt-4 mb-2")
 
-    if not favorites:
-        ui.label("You have no favorite movies yet.")
-        uit_footnote()
-        return
+    movies = get_favorite_movies(user_id)
 
-    for fav in favorites:
-        movie_id = fav['movie_id']
+    if not movies:
+        ui.label("You have no favorite movies yet.").classes("text-gray-500 mb-4")
+    else:
+        for m in movies:
+            movie_id = m['movie_id']
+            title = m['title']
+            release = m['release_date']
 
-        cur.execute("""
-            SELECT movie_id, title, release_date, runtime
-            FROM movies
-            WHERE movie_id = %s;
-        """, [movie_id])
-        movie = cur.fetchone()
-
-        if not movie:
-            continue
-
-        title = movie['title']
-        release = movie['release_date']
-        runtime = movie['runtime']
-
-        with ui.card().classes("w-full mb-3"):
-            ui.label(f"🎬 {title}").classes("text-lg font-bold")
-            ui.label(f"Release Date: {release}")
-            ui.label(f"Runtime: {runtime} minutes")
-
-            with ui.row().classes("mt-2"):
-                ui.button(
-                    "View",
-                    on_click=lambda e, movie_id=movie_id: ui.navigate.to(f'/movie/{movie_id}')
-                )
+            with ui.card().classes("w-full mb-3 p-4"):
+                ui.label(f"{title} ({release})").classes("text-lg font-bold")
 
                 ui.button(
-                    "Remove",
-                    on_click=lambda e, movie_id=movie_id: (
-                        remove_favorite(user_id, movie_id),
-                        ui.notify("Removed from favorites"),
-                        ui.navigate.to('/favorites')
-                    ),
-                    color="red"
-                )
+                    "View Movie",
+                    on_click=lambda e, id=movie_id: ui.navigate.to(f"/movie/{id}")
+                ).classes("mt-2")
+
+
+    # ---------------------------------------------------------
+    # ⭐ FAVORITE ACTORS
+    # ---------------------------------------------------------
+    ui.label("Favorite Actors").classes("text-2xl font-bold mt-8 mb-2")
+
+    actors = get_favorite_actors(user_id)
+
+    if not actors:
+        ui.label("You have no favorite actors yet.").classes("text-gray-500 mb-4")
+    else:
+        for a in actors:
+            person_id = a['person_id']
+            name = a['name']
+
+            with ui.card().classes("w-full mb-3 p-4"):
+                ui.label(name).classes("text-lg font-bold")
+
+                ui.button(
+                    "View Actor",
+                    on_click=lambda e, id=person_id: ui.navigate.to(f"/actor/{id}")
+                ).classes("mt-2")
+
+
+    # ---------------------------------------------------------
+    # ⭐ FAVORITE DIRECTORS
+    # ---------------------------------------------------------
+    ui.label("Favorite Directors").classes("text-2xl font-bold mt-8 mb-2")
+
+    directors = get_favorite_directors(user_id)
+
+    if not directors:
+        ui.label("You have no favorite directors yet.").classes("text-gray-500 mb-4")
+    else:
+        for d in directors:
+            director_id = d['director_id']
+            name = d['name']
+
+            with ui.card().classes("w-full mb-3 p-4"):
+                ui.label(name).classes("text-lg font-bold")
+
+                ui.button(
+                    "View Director",
+                    on_click=lambda e, id=director_id: ui.navigate.to(f"/director/{id}")
+                ).classes("mt-2")
 
     uit_footnote()

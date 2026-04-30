@@ -1,9 +1,12 @@
-# page_actor.py
-
 from tlbx_imports import *
 from ui_toolbox import *
-from db_actions import get_actor_details, get_movies_by_actor
-from favoriting import add_favorite, remove_favorite, is_favorited
+from db_actions import (
+    get_actor_details,
+    get_movies_by_actor,
+    add_favorite_item,
+    remove_favorite_item,
+    is_favorited_item,
+)
 
 
 @ui.page('/actor/{person_id}')
@@ -18,9 +21,31 @@ def actor_page(person_id: int):
         uit_footnote()
         return
 
-    ui.label(actor['name']).classes("text-3xl font-bold mb-4")
+    user_id = app.storage.user.get('user_id')
 
-    ui.label("Movies").classes("text-2xl font-bold mt-4")
+    # ---------------- ACTOR HEADER ----------------
+    with ui.row().classes("items-center mb-4"):
+        ui.label(actor['name']).classes("text-3xl font-bold")
+
+        if user_id:
+            is_fav = is_favorited_item(user_id, 'actor', person_id)
+
+            def toggle_actor_fav():
+                if is_fav:
+                    remove_favorite_item(user_id, 'actor', person_id)
+                    ui.notify("Removed actor from favorites")
+                else:
+                    add_favorite_item(user_id, 'actor', person_id)
+                    ui.notify("Added actor to favorites")
+                ui.navigate.to(f"/actor/{person_id}")
+
+            ui.button(
+                "❤️ Unfavorite Actor" if is_fav else "🤍 Favorite Actor",
+                on_click=toggle_actor_fav,
+            ).classes("ml-4")
+
+    # ---------------- MOVIES ----------------
+    ui.label("Movies").classes("text-2xl font-bold mt-2")
 
     movies = get_movies_by_actor(person_id)
 
@@ -28,8 +53,6 @@ def actor_page(person_id: int):
         ui.label("No movies found for this actor.")
         uit_footnote()
         return
-
-    user_id = app.storage.user.get('user_id')
 
     for m in movies:
         movie_id = m['movie_id']
@@ -42,25 +65,25 @@ def actor_page(person_id: int):
 
             with ui.row().classes("mt-2"):
                 ui.button(
-                    "View",
+                    "View Movie",
                     on_click=lambda e, id=movie_id: ui.navigate.to(f"/movie/{id}")
                 )
 
                 if user_id:
-                    fav = is_favorited(user_id, movie_id)
+                    is_movie_fav = is_favorited_item(user_id, 'movie', movie_id)
 
-                    def toggle_fav(movie_id=movie_id):
-                        if is_favorited(user_id, movie_id):
-                            remove_favorite(user_id, movie_id)
-                            ui.notify("Removed from favorites")
+                    def toggle_movie_fav(mid=movie_id):
+                        if is_favorited_item(user_id, 'movie', mid):
+                            remove_favorite_item(user_id, 'movie', mid)
+                            ui.notify("Removed movie from favorites")
                         else:
-                            add_favorite(user_id, movie_id)
-                            ui.notify("Added to favorites")
+                            add_favorite_item(user_id, 'movie', mid)
+                            ui.notify("Added movie to favorites")
                         ui.navigate.to(f"/actor/{person_id}")
 
                     ui.button(
-                        "❤️ Remove" if fav else "🤍 Add",
-                        on_click=toggle_fav
+                        "❤️ Unfavorite Movie" if is_movie_fav else "🤍 Favorite Movie",
+                        on_click=toggle_movie_fav,
                     )
 
     uit_footnote()
