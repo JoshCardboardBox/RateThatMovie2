@@ -1,5 +1,3 @@
-# page_search.py
-
 from tlbx_imports import *
 from ui_toolbox import *
 from db_actions import (
@@ -18,7 +16,6 @@ def search_page():
 
     query = ui.input("Search for movies, actors, or directors").classes("w-full")
 
-    # ⭐ Persistent results container
     results_container = ui.column().classes("mt-4")
 
     tabs = ui.tabs().classes("mt-4")
