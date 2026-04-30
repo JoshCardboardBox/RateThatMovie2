@@ -86,3 +86,29 @@ CREATE TABLE favorites (
 
 
 
+
+ALTER TABLE favorites DROP CONSTRAINT favorites_user_id_fkey;
+ALTER TABLE favorites ADD CONSTRAINT favorites_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE;
+
+ALTER TABLE reviews DROP CONSTRAINT reviews_user_id_fkey;
+ALTER TABLE reviews ADD CONSTRAINT reviews_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE;
+
+
+
+-- Code for watchlists
+CREATE TABLE watchlists(
+	list_id INT,
+	list_name VARCHAR(128),
+	user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+	creation_date TIME,
+	PRIMARY KEY (list_id)
+);
+CREATE TABLE watchlist_items(
+	list_id INT REFERENCES watchlists(list_id) ON DELETE CASCADE,
+	movie_id INT REFERENCES movies(movie_id) ON DELETE CASCADE,
+	add_date TIMESTAMP,
+	PRIMARY KEY (list_id, movie_id)
+);
+
+
+

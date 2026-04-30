@@ -24,6 +24,7 @@ def uit_banner():
         ui.button('Home', on_click=lambda: ui.navigate.to('/'))
         ui.button('Login / Logout', on_click=lambda: ui.navigate.to('/login'))
         ui.button('Create Account', on_click=lambda: ui.navigate.to('/create_account'))
+        ui.button('Settings', on_click=lambda: ui.navigate.to('/settings'))
 
 
 def uit_footnote():
@@ -40,13 +41,6 @@ def check_login():
         return False
 
 
-def check_login_msg():
-    s = check_login()
-    username = app.storage.user.get('username', None)  # default if not logged in is None
-    if s:  # true
-        ui.label("Welcome, " + username + ".")
-    else:
-        ui.label("You are not logged in.")
 
 def get_user_id():
     user_id = app.storage.user.get('user_id', None)

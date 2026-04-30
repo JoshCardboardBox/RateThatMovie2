@@ -22,10 +22,10 @@ from page_search import *
 from page_settings import *
 from page_reviews import *
 from page_favorites import *
+from page_watchlists import *
 from page_movie import *
 from page_actor import *
 from page_director import *
-
 
 
 #RUN WEBSITE
