@@ -1,38 +1,101 @@
-#imports
+# page_search.py
+
 from tlbx_imports import *
 from ui_toolbox import *
+from db_actions import (
+    search_movies,
+    search_actors,
+    search_directors,
+)
 
 
-#non-local
-search_table = None     #this will use comments
-
-# Search Stuff
 @ui.page('/search')
-def search():
+def search_page():
+
     uit_banner()
 
-    #add sm code here
-    with ui.card():
-        ui.label("Search Movies, Cast, and More!").style('font-size: 200%')
+    ui.label("Search").classes("text-3xl font-bold mb-4")
 
-        with ui.row():
-            ui.button("Movies")
-            ui.button("Actors")
+    query = ui.input("Search for movies, actors, or directors").classes("w-full")
 
+    # ⭐ Persistent results container
+    results_container = ui.column().classes("mt-4")
+
+    tabs = ui.tabs().classes("mt-4")
+    with tabs:
+        movie_tab = ui.tab("Movies")
+        actor_tab = ui.tab("Actors")
+        director_tab = ui.tab("Directors")
+
+    with ui.tab_panels(tabs, value=movie_tab):
+
+        # ---------------- MOVIES ----------------
+        with ui.tab_panel(movie_tab):
+
+            def do_movie_search():
+                results_container.clear()
+                if not query.value:
+                    return
+
+                results = search_movies(query.value)
+
+                with results_container:
+                    if not results:
+                        ui.label("No movies found.")
+                        return
+
+                    for m in results:
+                        ui.button(
+                            f"{m['title']} ({m['release_date']})",
+                            on_click=lambda e, id=m['movie_id']: ui.navigate.to(f"/movie/{id}")
+                        ).classes("w-full mb-2")
+
+            ui.button("Search Movies", on_click=do_movie_search).classes("mt-2")
+
+        # ---------------- ACTORS ----------------
+        with ui.tab_panel(actor_tab):
+
+            def do_actor_search():
+                results_container.clear()
+                if not query.value:
+                    return
+
+                results = search_actors(query.value)
+
+                with results_container:
+                    if not results:
+                        ui.label("No actors found.")
+                        return
+
+                    for a in results:
+                        ui.button(
+                            a['name'],
+                            on_click=lambda e, id=a['person_id']: ui.navigate.to(f"/actor/{id}")
+                        ).classes("w-full mb-2")
+
+            ui.button("Search Actors", on_click=do_actor_search).classes("mt-2")
+
+        # ---------------- DIRECTORS ----------------
+        with ui.tab_panel(director_tab):
+
+            def do_director_search():
+                results_container.clear()
+                if not query.value:
+                    return
+
+                results = search_directors(query.value)
+
+                with results_container:
+                    if not results:
+                        ui.label("No directors found.")
+                        return
+
+                    for d in results:
+                        ui.button(
+                            d['name'],
+                            on_click=lambda e, id=d['director_id']: ui.navigate.to(f"/director/{id}")
+                        ).classes("w-full mb-2")
+
+            ui.button("Search Directors", on_click=do_director_search).classes("mt-2")
 
     uit_footnote()
-
-
-def search_movies():
-    cols = [{'name': 'movie_title', 'label': 'Movie Title', 'field': 'movie_title', 'align': 'left'},
-            {'name': 'movie_release_date', 'label': 'Release Date', 'field': 'movie_release_date', 'align': 'left'}]
-    search_table = ui.table(columns=cols, rows=[], pagination={'rowsPerPage': 30, 'sortBy': 'movie_title'})
-
-
-    #call database
-
-#set table up to search for movies
-def set_table_movies():
-    cols = [{'name': 'movie_title', 'label': 'Movie Title', 'field': 'movie_title'},
-            {'name': 'movie_release_date', 'label': 'Release Date', 'field': 'movie_release_date'}]
-

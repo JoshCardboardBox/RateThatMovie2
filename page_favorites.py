@@ -1,42 +1,68 @@
+# page_favorites.py
+
 from tlbx_imports import *
 from ui_toolbox import *
-from favoriting import (
-    get_favorite_movies,
-    get_favorite_genres,
-    get_favorite_actors
-)
+from favoriting import get_favorite_movies, remove_favorite
+from db_actions import cur, conn
+
 
 @ui.page('/favorites')
 def favorites_page():
 
     uit_banner()
 
-    # ⭐ Correct way to get logged-in user
     user_id = app.storage.user.get('user_id')
 
     if not user_id:
-        ui.label("You must be logged in to view favorites.")
+        ui.label("You must be logged in to view favorites.").classes("text-red-500 text-xl")
         uit_footnote()
         return
 
-    ui.label("Your Favorites").classes("text-2xl font-bold mt-4")
+    ui.label("Your Favorite Movies").classes("text-2xl font-bold mb-4")
 
-    # Favorite Movies
-    movies = get_favorite_movies(user_id)
-    ui.label("Favorite Movies").classes("text-xl mt-4")
-    for m in movies:
-        ui.label(f"🎬 {m['title']}")
+    favorites = get_favorite_movies(user_id)
 
-    # Favorite Genres
-    genres = get_favorite_genres(user_id)
-    ui.label("Favorite Genres").classes("text-xl mt-4")
-    for g in genres:
-        ui.label(f"🏷️ {g['name']}")
+    if not favorites:
+        ui.label("You have no favorite movies yet.")
+        uit_footnote()
+        return
 
-    # Favorite Actors
-    actors = get_favorite_actors(user_id)
-    ui.label("Favorite Actors").classes("text-xl mt-4")
-    for a in actors:
-        ui.label(f"⭐ {a['name']}")
+    for fav in favorites:
+        movie_id = fav['movie_id']
+
+        cur.execute("""
+            SELECT movie_id, title, release_date, runtime
+            FROM movies
+            WHERE movie_id = %s;
+        """, [movie_id])
+        movie = cur.fetchone()
+
+        if not movie:
+            continue
+
+        title = movie['title']
+        release = movie['release_date']
+        runtime = movie['runtime']
+
+        with ui.card().classes("w-full mb-3"):
+            ui.label(f"🎬 {title}").classes("text-lg font-bold")
+            ui.label(f"Release Date: {release}")
+            ui.label(f"Runtime: {runtime} minutes")
+
+            with ui.row().classes("mt-2"):
+                ui.button(
+                    "View",
+                    on_click=lambda e, movie_id=movie_id: ui.navigate.to(f'/movie/{movie_id}')
+                )
+
+                ui.button(
+                    "Remove",
+                    on_click=lambda e, movie_id=movie_id: (
+                        remove_favorite(user_id, movie_id),
+                        ui.notify("Removed from favorites"),
+                        ui.navigate.to('/favorites')
+                    ),
+                    color="red"
+                )
 
     uit_footnote()
