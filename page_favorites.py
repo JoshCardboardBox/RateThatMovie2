@@ -1,9 +1,11 @@
-# page_favorites.py
-
 from tlbx_imports import *
 from ui_toolbox import *
-from favoriting import get_favorite_movies, remove_favorite
-from db_actions import cur, conn
+from db_actions import (
+    get_favorite_movies,
+    get_favorite_actors,
+    get_favorite_directors,
+    remove_favorite_item,
+)
 
 
 @ui.page('/favorites')
@@ -18,51 +20,109 @@ def favorites_page():
         uit_footnote()
         return
 
-    ui.label("Your Favorite Movies").classes("text-2xl font-bold mb-4")
+    # ---------------------------------------------------------
+    # FAVORITE MOVIES
+    # ---------------------------------------------------------
+    ui.label("🎬 Your Favorite Movies").classes("text-2xl font-bold mb-4")
 
-    favorites = get_favorite_movies(user_id)
+    movies = get_favorite_movies(user_id)
 
-    if not favorites:
-        ui.label("You have no favorite movies yet.")
-        uit_footnote()
-        return
+    if not movies:
+        ui.label("You have no favorite movies yet.").classes("text-gray-500 mb-6")
+    else:
+        for fav in movies:
+            movie_id = fav['movie_id']
+            title = fav['title']
+            release = fav['release_date']
 
-    for fav in favorites:
-        movie_id = fav['movie_id']
+            with ui.card().classes("w-full mb-3 p-4"):
+                ui.label(f"{title}").classes("text-lg font-bold")
+                ui.label(f"Release Date: {release}")
 
-        cur.execute("""
-            SELECT movie_id, title, release_date, runtime
-            FROM movies
-            WHERE movie_id = %s;
-        """, [movie_id])
-        movie = cur.fetchone()
+                with ui.row().classes("mt-2"):
+                    ui.button(
+                        "View",
+                        on_click=lambda e, mid=movie_id: ui.navigate.to(f"/movie/{mid}")
+                    )
 
-        if not movie:
-            continue
+                    ui.button(
+                        "Remove",
+                        color="red",
+                        on_click=lambda e, mid=movie_id: (
+                            remove_favorite_item(user_id, 'movie', mid),
+                            ui.notify("Removed from favorites"),
+                            ui.navigate.to('/favorites')
+                        )
+                    )
 
-        title = movie['title']
-        release = movie['release_date']
-        runtime = movie['runtime']
+    ui.separator()
 
-        with ui.card().classes("w-full mb-3"):
-            ui.label(f"🎬 {title}").classes("text-lg font-bold")
-            ui.label(f"Release Date: {release}")
-            ui.label(f"Runtime: {runtime} minutes")
+    # ---------------------------------------------------------
+    # FAVORITE ACTORS
+    # ---------------------------------------------------------
+    ui.label("🎭 Your Favorite Actors").classes("text-2xl font-bold mt-6 mb-4")
 
-            with ui.row().classes("mt-2"):
-                ui.button(
-                    "View",
-                    on_click=lambda e, movie_id=movie_id: ui.navigate.to(f'/movie/{movie_id}')
-                )
+    actors = get_favorite_actors(user_id)
 
-                ui.button(
-                    "Remove",
-                    on_click=lambda e, movie_id=movie_id: (
-                        remove_favorite(user_id, movie_id),
-                        ui.notify("Removed from favorites"),
-                        ui.navigate.to('/favorites')
-                    ),
-                    color="red"
-                )
+    if not actors:
+        ui.label("You have no favorite actors yet.").classes("text-gray-500 mb-6")
+    else:
+        for fav in actors:
+            person_id = fav['person_id']
+            name = fav['name']
+
+            with ui.card().classes("w-full mb-3 p-4"):
+                ui.label(name).classes("text-lg font-bold")
+
+                with ui.row().classes("mt-2"):
+                    ui.button(
+                        "View Actor",
+                        on_click=lambda e, pid=person_id: ui.navigate.to(f"/actor/{pid}")
+                    )
+
+                    ui.button(
+                        "Remove",
+                        color="red",
+                        on_click=lambda e, pid=person_id: (
+                            remove_favorite_item(user_id, 'actor', pid),
+                            ui.notify("Removed from favorites"),
+                            ui.navigate.to('/favorites')
+                        )
+                    )
+
+    ui.separator()
+
+    # ---------------------------------------------------------
+    # FAVORITE DIRECTORS
+    # ---------------------------------------------------------
+    ui.label("🎬 Your Favorite Directors").classes("text-2xl font-bold mt-6 mb-4")
+
+    directors = get_favorite_directors(user_id)
+
+    if not directors:
+        ui.label("You have no favorite directors yet.").classes("text-gray-500 mb-6")
+    else:
+        for fav in directors:
+            director_id = fav['director_id']
+            name = fav['name']
+
+            with ui.card().classes("w-full mb-3 p-4"):
+                ui.label(name).classes("text-lg font-bold")
+
+                with ui.row().classes("mt-2"):
+                    ui.button(
+                        "View Director",
+                        on_click=lambda e, did=director_id: ui.navigate.to(f"/director/{did}")
+                    )
+
+                    ui.button(
+                        "Remove",
+                        color="red",
+                        on_click=lambda e, did=director_id: (
+                            remove_favorite_item(user_id, 'director', did),
+                            ui.notify("Removed from favorites"),
+                            ui.navigate.to('/favorites')
+                        )
+                    )
 
     uit_footnote()

@@ -2,7 +2,7 @@ from tlbx_imports import *
 from ui_toolbox import *
 from db_actions import get_director_details, get_movies_by_director
 from favoriting import add_favorite, remove_favorite, is_favorited
-
+from rating_tool import star_rating
 
 @ui.page('/director/{director_id}')
 def director_page(director_id: int):
@@ -28,6 +28,8 @@ def director_page(director_id: int):
         return
 
     user_id = app.storage.user.get('user_id')
+    if user_id:
+        star_rating(user_id, 'director', director_id)
 
     for m in movies:
         movie_id = m['movie_id']
