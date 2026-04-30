@@ -4,6 +4,7 @@ from tlbx_imports import *
 from ui_toolbox import *
 from db_actions import get_actor_details, get_movies_by_actor
 from favoriting import add_favorite, remove_favorite, is_favorited
+from rating_tool import star_rating
 
 
 @ui.page('/actor/{person_id}')
@@ -30,6 +31,8 @@ def actor_page(person_id: int):
         return
 
     user_id = app.storage.user.get('user_id')
+    if user_id:
+        star_rating(user_id, 'actor', person_id)
 
     for m in movies:
         movie_id = m['movie_id']
@@ -39,6 +42,7 @@ def actor_page(person_id: int):
 
         with ui.card().classes("w-full mb-3 p-4"):
             ui.label(f"{title} ({release}) — {character}").classes("text-lg font-bold")
+
 
             with ui.row().classes("mt-2"):
                 ui.button(
