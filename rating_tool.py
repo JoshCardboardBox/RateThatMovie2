@@ -11,7 +11,7 @@ def star_rating(user_id, item_type, item_id):
     def render():
         container.clear()
 
-        # ---------------- USER RATING ----------------
+        #USER RATING
         with container:
             ui.label("Your Rating:").classes("text-xl font-bold")
 
@@ -27,7 +27,7 @@ def star_rating(user_id, item_type, item_id):
 
                     ui.button(star, on_click=set_rating).classes("text-3xl")
 
-        # ---------------- AVERAGE RATING ----------------
+        #AVERAGE RATING
         with container:
             ui.label("Average Rating:").classes("text-xl font-bold mt-4")
 

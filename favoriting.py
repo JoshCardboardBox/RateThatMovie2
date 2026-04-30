@@ -4,9 +4,9 @@ from tlbx_imports import *
 from db_actions import cur, conn
 
 
-# ---------------------------------------------------------
+
 # ADD FAVORITE (MOVIES ONLY)
-# ---------------------------------------------------------
+
 def add_favorite(user_id, movie_id):
     try:
         cur.execute("""
@@ -22,9 +22,9 @@ def add_favorite(user_id, movie_id):
         return False
 
 
-# ---------------------------------------------------------
+
 # REMOVE FAVORITE
-# ---------------------------------------------------------
+
 def remove_favorite(user_id, movie_id):
     try:
         cur.execute("""
@@ -39,9 +39,9 @@ def remove_favorite(user_id, movie_id):
         return False
 
 
-# ---------------------------------------------------------
+
 # CHECK IF FAVORITED
-# ---------------------------------------------------------
+
 def is_favorited(user_id, movie_id):
     try:
         cur.execute("""
@@ -55,9 +55,9 @@ def is_favorited(user_id, movie_id):
         return False
 
 
-# ---------------------------------------------------------
+
 # GET ALL FAVORITE MOVIES FOR A USER
-# ---------------------------------------------------------
+
 def get_favorite_movies(user_id):
     try:
         cur.execute("""

@@ -47,9 +47,9 @@ def movie_page(movie_id: int):
 
     ui.separator()
 
-    # ---------------------------------------------------------
+
     # USER ID + RATING
-    # ---------------------------------------------------------
+
     user_id = app.storage.user.get('user_id')
 
     if user_id:
@@ -59,9 +59,9 @@ def movie_page(movie_id: int):
         uit_footnote()
         return
 
-    # ---------------------------------------------------------
+
     # FAVORITING
-    # ---------------------------------------------------------
+
     favorited = is_favorited_item(user_id, 'movie', movie_id)
 
     def toggle_favorite():
@@ -81,9 +81,9 @@ def movie_page(movie_id: int):
 
     ui.separator()
 
-    # ---------------------------------------------------------
+
     # CAST SECTION
-    # ---------------------------------------------------------
+
     ui.label("Cast").classes("text-2xl font-bold mt-6 mb-2")
 
     cast = get_full_cast(movie_id)
@@ -101,9 +101,9 @@ def movie_page(movie_id: int):
 
     ui.separator()
 
-    # ---------------------------------------------------------
+
     # CREW SECTION
-    # ---------------------------------------------------------
+
     ui.label("Crew").classes("text-2xl font-bold mt-6 mb-2")
 
     crew = get_full_crew(movie_id)

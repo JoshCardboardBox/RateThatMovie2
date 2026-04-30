@@ -20,9 +20,9 @@ def favorites_page():
         uit_footnote()
         return
 
-    # ---------------------------------------------------------
+
     # FAVORITE MOVIES
-    # ---------------------------------------------------------
+
     ui.label("🎬 Your Favorite Movies").classes("text-2xl font-bold mb-4")
 
     movies = get_favorite_movies(user_id)
@@ -57,9 +57,9 @@ def favorites_page():
 
     ui.separator()
 
-    # ---------------------------------------------------------
+
     # FAVORITE ACTORS
-    # ---------------------------------------------------------
+
     ui.label("🎭 Your Favorite Actors").classes("text-2xl font-bold mt-6 mb-4")
 
     actors = get_favorite_actors(user_id)
@@ -92,9 +92,9 @@ def favorites_page():
 
     ui.separator()
 
-    # ---------------------------------------------------------
+
     # FAVORITE DIRECTORS
-    # ---------------------------------------------------------
+
     ui.label("🎬 Your Favorite Directors").classes("text-2xl font-bold mt-6 mb-4")
 
     directors = get_favorite_directors(user_id)
