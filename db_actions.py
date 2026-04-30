@@ -87,3 +87,32 @@ def security_input(input):
     if ";" in input:
         input = input.replace(";", "")
     return input
+
+
+#Database reviews add and get them
+
+#stores which user reviewed what movie
+def add_review(user_id, movie_id, rating, review_text):
+    cur.execute(
+        """ INSERT INTO reviews (user_id, movie_id, rating, review_text) VALUES (%s, %s, %s, %s)"""
+        , [user_id, movie_id, rating, review_text] )
+    conn.commit()
+
+
+#gets the reviews from database
+#joins users and the movie table so the username and titles show instead of ids
+def get_all_reviews():
+    cur.execute(
+        """ SELECT
+            users.username, movies.title, reviews.rating, reviews.review_text, reviews.created_at
+        FROM reviews JOIN users ON  reviews.user_id =  users.user_id JOIN movies ON reviews.movie_id = movies.movie_id
+        ORDER BY  reviews.created_at DESC""" )
+    return cur.fetchall()
+
+
+#dropdown table
+#displays movies in alphabetical order
+def get_movie_options():
+    cur.execute("SELECT movie_id, title FROM movies ORDER BY title")
+    return cur.fetchall()
+
