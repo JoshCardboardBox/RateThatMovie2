@@ -1,0 +1,35 @@
+This is the data importer, that will take .csv files and import them into our SQL server
+The original importer has now been updated to use a relative path for accessing csv_files!
+
+
+Credits to Malik Waters for creating the original importer.
+Credits to Joshua Hwang for updating it.
+
+
+
+Importers made in this order:
+- import_cast.py
+- import_movies.py              <look below>
+- import_crew.py
+- import_genres.py
+- import_reviews.py (WIP, discontinued implementation for now, look at temp_calls file)
+
+all store in a temp_xxx, xxx being the name of the .csv file
+
+
+
+NOTE: You will need to put the csv files in the csv_files folder; it's too large to send it over GitHub!
+Download the data through this link:
+https://www.kaggle.com/datasets/rishabhkumar2003/the-movie-database-tmdb-comprehensive-dataset
+
+
+NOTES ABOUT movies.csv
+    One of the columns is completely bugged, and starts with a title rather than a proper id.
+    Make sure to delete the row that starts w/ "Of the domestic exploration for finding my voice."
+    This should be column 6133.
+
+NOTES ABOUT reviews.csv
+    Some of the content for reviews are absurdly long.
+    No idea if we'll use that anyway.
+
+yeah...

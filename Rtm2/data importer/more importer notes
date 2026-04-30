@@ -1,0 +1,114 @@
+you need to convert the temp_xxx tables into more relations.
+
+
+
+CREATE TABLE movies (
+	movie_id INT,
+	title VARCHAR(128),
+	runtime INT,
+	release_date DATE,
+	budget BIGINT,
+	revenue BIGINT,
+	status VARCHAR(128),
+	adult INT,
+	genres VARCHAR(128),
+	original_language VARCHAR(64),
+
+	PRIMARY KEY (movie_id)
+);
+
+INSERT INTO movies SELECT id as movie_id, title, runtime, release_date, budget, revenue, status, adult, genres, original_language FROM temp_movies;
+SELECT title, genres FROM movies WHERE genres LIKE '%Drama%';
+
+
+
+
+
+CREATE TABLE persons (
+    person_id INT,
+    name VARCHAR(128),
+
+    PRIMARY KEY (person_id)
+);
+
+INSERT INTO persons SELECT DISTINCT person_id, name FROM
+(SELECT person_id, name FROM temp_cast) UNION (SELECT person_id, name FROM temp_crew);
+
+
+
+
+
+
+
+CREATE TABLE crew (
+    crew_id INT,
+    person_id INT REFERENCES persons(person_id),
+    movie_id INT REFERENCES movies(movie_id),
+
+    department VARCHAR(128),
+    job VARCHAR(128),
+
+    PRIMARY KEY (crew_id)
+);
+
+INSERT INTO crew SELECT id as crew_id, person_id, movie_id, department, job FROM temp_crew;
+
+
+CREATE TABLE actors (
+    actor_id INT,
+    person_id INT REFERENCES persons(person_id),
+    movie_id INT REFERENCES movies(movie_id),
+
+    character VARCHAR(1024),
+    cast_order INT,
+
+    PRIMARY KEY (actor_id)
+);
+
+INSERT INTO actors SELECT id as actor_id, person_id, movie_id, character, cast_order FROM temp_cast;
+
+
+CREATE TABLE watched (
+    user_id INT REFERENCES users(user_id),
+    movie_id INT REFERENCES movies(movie_id),
+
+    PRIMARY KEY (user_id, movie_id)
+);
+
+CREATE TABLE favorites (
+    favorite_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id),
+    item_type VARCHAR(32) NOT NULL,
+    item_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (user_id, item_type, item_id)
+)
+
+
+
+
+ALTER TABLE favorites DROP CONSTRAINT favorites_user_id_fkey;
+ALTER TABLE favorites ADD CONSTRAINT favorites_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE;
+
+ALTER TABLE reviews DROP CONSTRAINT reviews_user_id_fkey;
+ALTER TABLE reviews ADD CONSTRAINT reviews_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE;
+
+
+
+-- Code for watchlists
+CREATE TABLE watchlists(
+	list_id INT,
+	list_name VARCHAR(128),
+	user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+	creation_date TIME,
+	PRIMARY KEY (list_id)
+);
+CREATE TABLE watchlist_items(
+	list_id INT REFERENCES watchlists(list_id) ON DELETE CASCADE,
+	movie_id INT REFERENCES movies(movie_id) ON DELETE CASCADE,
+	add_date TIMESTAMP,
+	PRIMARY KEY (list_id, movie_id)
+);
+
+
+
