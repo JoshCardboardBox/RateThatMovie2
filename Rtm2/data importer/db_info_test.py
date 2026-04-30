@@ -1,7 +1,0 @@
-#FOR TESTING
-#DBUSER = "hwaji-28"
-#DBPASS = "hwaji-28"
-
-#IF YOU WANT TO IMPORT TO THE REAL DATABASE
-DBUSER = "watmj-26"
-DBPASS = "watmj-26"
